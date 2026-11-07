@@ -60,7 +60,7 @@ export function EvidenceDetail({ e }: { e: EvidenceRow }) {
         <dt className="text-fg-subtle">Verification</dt>
         <dd className="leading-relaxed text-fg-muted">{e.verificationNote ?? VERIFICATION_META[e.verificationStatus]?.help}</dd>
         <dt className="text-fg-subtle">Influence</dt>
-        <dd className="text-fg-muted">{e.influence ?? "Recorded for context"}</dd>
+        <dd className="text-fg-muted">{e.verificationStatus === "CONTRADICTED" ? `Disregarded: verification contradicted this claim${e.influence ? ` (the agent offered it as: ${e.influence.toLowerCase()})` : ""}` : e.verificationStatus === "SUPERSEDED" ? `No longer current; ${e.influence?.toLowerCase() ?? "kept for history"}` : (e.influence ?? "Recorded for context")}</dd>
         <dt className="text-fg-subtle">Recorded</dt>
         <dd className="text-fg-muted">{dateTime(e.createdAt)}</dd>
       </dl>

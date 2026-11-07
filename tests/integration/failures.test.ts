@@ -9,7 +9,7 @@ import { getSwitch } from "@/src/lib/switch";
 import type { SimulatedSwitchBackend } from "@/src/lib/switch/simulator";
 import { runCommand } from "@/src/lib/execution/runner";
 import { ensureRuntime } from "@/src/orchestration/runtime";
-import { cancelIncident, handleHandoff } from "@/src/orchestration/workflow";
+import { cancelIncident, handleHandoff, postHumanMessage } from "@/src/orchestration/workflow";
 import { createPullRequest } from "@/src/orchestration/approval";
 import { connectGitHubRepository } from "@/src/services/repositories";
 import { saveGitHubToken } from "@/src/lib/github/tokens";
@@ -157,5 +157,16 @@ describe("failure handling", () => {
     expect(after.status).toBe("APPROVED");
     expect(after.pullRequestUrl).toBeNull();
     expect(after.lastError).toMatch(/Pull request creation failed/);
+  });
+
+  it("recreates a simulator room lost to a restart instead of failing to deliver", async () => {
+    const { user, workspace, repo } = await makeUser("restart@example.com", "Re Start");
+    const inc = await createIncident(user, { ...report, workspaceId: workspace.id, repositoryId: repo.id });
+    await waitForStatus(inc.id, ["AWAITING_APPROVAL"], 60_000);
+    await db.incident.update({ where: { id: inc.id }, data: { switchRoomId: "00000000-0000-0000-0000-000000000000" } });
+    await postHumanMessage(inc.id, { id: user.id, name: user.name }, "Are you still there?", "TRIAGE");
+    const after = await db.incident.findUniqueOrThrow({ where: { id: inc.id } });
+    expect(after.switchRoomId).not.toBe("00000000-0000-0000-0000-000000000000");
+    await waitFor(() => db.agentMessage.findFirst({ where: { incidentId: inc.id, messageType: "CHAT" } }), { label: "reply in recreated room" });
   });
 });

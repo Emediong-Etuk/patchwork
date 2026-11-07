@@ -34,14 +34,24 @@ export async function postToRoom(input: PostInput) {
   const handoff: Handoff | undefined = input.handoff
     ? { v: 1, incidentId: input.incident.id, kind: input.handoff.kind, taskKey: input.handoff.taskKey, attempt: input.handoff.attempt, from: input.from, to: input.to[0] ?? null, ts: Date.now(), data: input.handoff.data }
     : undefined;
-  const sent = await sw.send(input.from, input.incident.switchRoomId, text, input.to, handoff);
+  let roomId = input.incident.switchRoomId;
+  let sent;
+  try {
+    sent = await sw.send(input.from, roomId, text, input.to, handoff);
+  } catch (e) {
+    // The simulator keeps rooms in memory; after a restart, recreate the room once.
+    if (sw.backend.mode !== "simulator" || !/Room not found/.test((e as Error).message)) throw e;
+    roomId = await recreateSimulatorRoom(input.incident.id);
+    input.incident.switchRoomId = roomId;
+    sent = await sw.send(input.from, roomId, text, input.to, handoff);
+  }
   const names = sw.names();
   const fromAgent = input.from === "RELAY" ? null : (input.from as AgentRole);
   const metadata = {
     to: input.to.map((k) => (k === "RELAY" ? "PATCHWORK Console" : roleName(k as AgentRole))),
     mentions: input.to.map((k) => names[k]),
     handoff: handoff ? { kind: handoff.kind, taskKey: handoff.taskKey, attempt: handoff.attempt } : null,
-    switch: { mode: sw.backend.mode, roomId: input.incident.switchRoomId, messageId: sent.messageId, deliveryAttempts: sent.attempts, bodyHash: bodyHash(input.incident.switchRoomId, sent.body), delivered: false },
+    switch: { mode: sw.backend.mode, roomId: roomId, messageId: sent.messageId, deliveryAttempts: sent.attempts, bodyHash: bodyHash(roomId, sent.body), delivered: false },
     relayedFor: input.humanSender ?? null,
   };
   const msg = await db.agentMessage.create({
@@ -87,4 +97,13 @@ export async function postNotice(input: Omit<PostInput, "handoff">) {
     await emitEvent({ incidentId: input.incident.id, workspaceId: input.incident.workspaceId, actorType: "SYSTEM", eventType: "WORKFLOW_ERROR", description: `Could not post to the Switch room: ${(e as Error).message}` });
     return null;
   }
+}
+
+async function recreateSimulatorRoom(incidentId: string) {
+  const sw = getSwitch();
+  const incident = await db.incident.findUniqueOrThrow({ where: { id: incidentId }, include: { repository: true } });
+  const room = await sw.createRoom({ number: incident.number, title: incident.title, repositoryFullName: incident.repository.fullName, severity: incident.severity });
+  await db.incident.update({ where: { id: incidentId }, data: { switchRoomId: room.id, switchRoomName: room.name } });
+  await emitEvent({ incidentId, workspaceId: incident.workspaceId, actorType: "SYSTEM", eventType: "SWITCH_ROOM_CREATED", description: `Simulated (local) Switch room ${room.name} recreated after a server restart (simulator rooms are in memory)`, metadata: { roomId: room.id, recreated: true } });
+  return room.id;
 }

@@ -41,7 +41,7 @@ function WorkspaceSelector() {
   const { me, workspaceId, setWorkspaceId } = useWorkspace();
   const current = me?.workspaces.find((w) => w.id === workspaceId);
   return (
-    <Menu label="Select workspace" align="left" trigger={() => <span className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium hover:bg-surface-3">{current?.name ?? "Workspace"} <ChevronsUpDown className="size-3.5 text-fg-subtle" /></span>}>
+    <Menu label="Select workspace" align="left" trigger={() => <span className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium hover:bg-surface-3"><span className="max-w-[140px] truncate">{current?.name ?? "Workspace"}</span> <ChevronsUpDown className="size-3.5 shrink-0 text-fg-subtle" /></span>}>
       {(close) => (
         <>
           <p className="px-2 py-1 text-[11px] uppercase tracking-wide text-fg-subtle">Workspaces</p>
@@ -188,10 +188,10 @@ function Shell({ children }: { children: ReactNode }) {
         <button type="button" className="rounded p-1.5 text-fg-muted hover:bg-surface-3 lg:hidden" onClick={() => setMobile(true)} aria-label="Open navigation">
           <MenuIcon className="size-4" />
         </button>
-        <Link href="/dashboard" className="mr-2">
+        <Link href="/dashboard" className="mr-1 sm:mr-2">
           <Logo />
         </Link>
-        <span className="text-border-strong">/</span>
+        <span className="text-border-strong max-sm:hidden">/</span>
         <WorkspaceSelector />
         <RepositorySelector />
         <div className="ml-auto flex items-center gap-2">

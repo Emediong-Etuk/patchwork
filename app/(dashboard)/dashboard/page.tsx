@@ -76,8 +76,8 @@ export default function DashboardPage() {
           <Stat label="Resolved" value={count((s) => s === "RESOLVED")} icon={<CheckCircle2 />} hint="Approved and closed" />
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
-          <Card>
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <Card className="self-start">
             <CardHeader title="Incidents" description={repositoryId ? "Filtered by repository" : "Most recent first"} actions={<Link href="/incidents" className="text-xs text-fg-subtle hover:text-fg">View all</Link>} />
             <IncidentTable incidents={list?.slice(0, 10)} loading={incidents.isLoading} />
           </Card>

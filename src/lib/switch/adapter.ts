@@ -149,6 +149,12 @@ export class SwitchCollaboration {
     throw new Error(`Switch message delivery failed: ${(lastErr as Error)?.message ?? "unknown error"}`);
   }
 
+  /** Run an operation as one of PATCHWORK's identities (used by the connectivity check). */
+  async opAs<T>(key: IdentityKey, name: string, args: Record<string, unknown>): Promise<T> {
+    await this.start();
+    return this.backend.op<T>(this.identities.get(key)!, name, args);
+  }
+
   async readContext(roomId: string, limit = 30): Promise<RoomContext> {
     await this.start();
     return this.backend.op<RoomContext>(this.identities.get("RELAY")!, "read_context", { room_id: roomId, limit });

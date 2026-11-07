@@ -42,7 +42,7 @@ export function IncidentTable({ incidents, loading, compact }: { incidents: Inci
             {!compact && <th className="px-4 py-2 font-medium">Repository</th>}
             <th className="px-4 py-2 font-medium">Severity</th>
             <th className="px-4 py-2 font-medium">Status</th>
-            <th className="px-4 py-2 font-medium">Active agent</th>
+            <th className="whitespace-nowrap px-4 py-2 font-medium">Active agent</th>
             <th className="px-4 py-2 font-medium">Created</th>
           </tr>
         </thead>
@@ -53,11 +53,11 @@ export function IncidentTable({ incidents, loading, compact }: { incidents: Inci
               <tr key={i.id} onClick={() => router.push(`/incidents/${i.id}`)} className="cursor-pointer border-b border-border/60 last:border-0 hover:bg-surface-2">
                 <td className="max-w-[340px] px-4 py-2.5">
                   <Link href={`/incidents/${i.id}`} className="flex items-center gap-2 focus:outline-none" onClick={(e) => e.stopPropagation()}>
-                    <span className="font-mono text-xs text-fg-subtle">INC-{i.number}</span>
+                    <span className="whitespace-nowrap font-mono text-xs text-fg-subtle">INC-{i.number}</span>
                     <span className="truncate font-medium text-fg">{i.title}</span>
                   </Link>
                 </td>
-                {!compact && <td className="px-4 py-2.5 font-mono text-xs text-fg-muted">{i.repository.fullName}</td>}
+                {!compact && <td className="max-w-[220px] truncate whitespace-nowrap px-4 py-2.5 font-mono text-xs text-fg-muted" title={i.repository.fullName}>{i.repository.fullName}</td>}
                 <td className="px-4 py-2.5"><SeverityBadge severity={i.severity} /></td>
                 <td className="px-4 py-2.5"><StatusBadge status={i.status} /></td>
                 <td className="px-4 py-2.5">

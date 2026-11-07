@@ -128,7 +128,9 @@ export function CollaborationRoom({ d, events, state }: { d: IncidentDetail; eve
     onSettled: () => qc.invalidateQueries({ queryKey: ["incident", d.incident.id] }),
   });
   const deliveries = useMemo(() => events.filter((e) => e.eventType === "SWITCH_HANDOFF_DELIVERED"), [events]);
-  useEffect(() => bottom.current?.scrollIntoView({ block: "end" }), [d.messages.length]);
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ block: "end" });
+  }, [d.messages.length]);
   const closed = d.incident.status === "CANCELLED";
 
   return (

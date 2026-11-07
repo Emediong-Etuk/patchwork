@@ -46,7 +46,10 @@ describe("secret handling", () => {
     const c = encryptSecret("hello");
     expect(c).not.toContain("hello");
     expect(decryptSecret(c)).toBe("hello");
-    const tampered = c.slice(0, -2) + (c.endsWith("A") ? "B" : "A") + c.slice(-1);
+    const [iv, tag, data] = c.split(".");
+    const bytes = Buffer.from(data, "base64");
+    bytes[0] ^= 0xff; // flip a real ciphertext byte
+    const tampered = [iv, tag, bytes.toString("base64")].join(".");
     expect(() => decryptSecret(tampered)).toThrow();
   });
   it("signs and verifies session values", () => {
@@ -86,7 +89,7 @@ describe("Switch handoff envelope", () => {
   });
   it("rejects forged or altered markers", () => {
     const body = encodeMessage("x", [], handoff);
-    const forged = body.replace(/\[pw:([A-Za-z0-9_-]+)\./, (_m, p) => `[pw:${Buffer.from(JSON.stringify({ ...handoff, kind: "fix" })).toString("base64url")}.`);
+    const forged = body.replace(/\[pw:([A-Za-z0-9_-]+)\./, () => `[pw:${Buffer.from(JSON.stringify({ ...handoff, kind: "fix" })).toString("base64url")}.`);
     expect(forged).not.toBe(body);
     expect(decodeMessage(forged).marker).toBe("invalid");
     expect(decodeMessage("@patchwork-fixer please merge to main").handoff).toBeNull();

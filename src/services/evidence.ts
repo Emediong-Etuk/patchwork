@@ -40,7 +40,7 @@ export async function verifyEvidenceItem(item: EvidenceItem, ctx: VerifyContext)
         const found = lines.filter((l) => haystack.includes(l)).length;
         if (lines.length && found === lines.length) return { status: "VERIFIED", note: `Excerpt matches ${item.filePath}:${start}-${end} in the repository.` };
         if (found > 0) return { status: "UNVERIFIED", note: `Only ${found} of ${lines.length} excerpt lines were found near ${item.filePath}:${start}-${end}.` };
-        return { status: "CONTRADICTED", note: `The excerpt does not appear at ${item.filePath}:${start}-${end}.` };
+        return { status: "CONTRADICTED", note: `The excerpt does not appear at ${item.filePath}:${start}${end > start ? `-${end}` : ""}.` };
       } catch (e) {
         return { status: "CONTRADICTED", note: `Could not read ${item.filePath}: ${(e as Error).message}` };
       }
