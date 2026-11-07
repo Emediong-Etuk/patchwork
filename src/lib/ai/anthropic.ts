@@ -11,7 +11,7 @@ export class AnthropicProvider implements LLMProvider {
 
   availability(): { ok: true } | { ok: false; reason: string } {
     if (!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_AUTH_TOKEN)
-      return { ok: false, reason: "ANTHROPIC_API_KEY is not set. PATCHWORK agents cannot run without an AI provider; add the key to .env and restart." };
+      return { ok: false, reason: "ANTHROPIC_API_KEY is not set. PATCHWORK agents cannot run without an AI provider; set it in the server environment (.env locally, or your host's variables) and restart." };
     return { ok: true };
   }
 

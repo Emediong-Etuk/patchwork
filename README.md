@@ -18,6 +18,7 @@ PATCHWORK takes a software bug from report to verified fix with a team of four s
 - [Workflow](#workflow)
 - [Security model](#security-model)
 - [Setup](#setup)
+- [Deploying](#deploying)
 - [Connecting Switch](#connecting-switch)
 - [Connecting GitHub](#connecting-github)
 - [Running the demo](#running-the-demo)
@@ -167,6 +168,14 @@ Open http://localhost:3000, click **Open Workspace**, and sign in with any name 
 
 **Docker:** `docker compose up --build` starts PostgreSQL and PATCHWORK (migrations and seed run on start). Switch runs separately; the compose file points `SWITCH_BRIDGE_URL` at `host.docker.internal:8000` by default.
 
+## Deploying
+
+PATCHWORK needs a host that runs a long-lived server (agents work in the background for minutes, run `git` and test commands, and stream live updates), plus PostgreSQL. Serverless platforms such as Vercel are not a fit. The root `Dockerfile` works on container hosts such as Railway, Render or Fly.io, or on any VPS with Docker; it runs migrations and the seed on start and listens on `$PORT`.
+
+Required variables on the host: `DATABASE_URL`, `APP_URL` (the public https URL), `AUTH_SECRET`, `ENCRYPTION_KEY` (64 hex characters), `ANTHROPIC_API_KEY`, and a private `PATCHWORK_ACCESS_CODE` (anyone with it can sign in and run agents on your API key). Incident workspaces live on the container's disk and are lost on redeploy; the database keeps all history.
+
+To use real Switch from a hosted PATCHWORK, the Switch server must be reachable from the host: run Switch on a server with a public HTTPS API URL (see [Host Switch for your team](https://docs.switchagents.ai/flintai/switch/deploy/self-host)), or run PATCHWORK on the same machine as Switch. A Switch Console server on your own computer only listens on that computer.
+
 ## Connecting Switch
 
 1. **Run a Switch server.** Either install [Switch Console](https://github.com/sandbox-quantum/switch#get-started-in-two-steps) and let it run a server for you, or self-host the standalone Compose stack ([docs](https://docs.switchagents.ai/flintai/switch/deploy/self-host)) — it publishes the API on port 8000 and needs `AGENT_REGISTRATION_TOKEN` set before first start. Add the `collab` profile to get a Mattermost to watch the rooms in.
@@ -243,7 +252,7 @@ Latest run: **57/57** Vitest tests and **3/3** Playwright tests passing.
 - **Process isolation by default.** `EXECUTION_MODE=process` runs allowlisted test commands as child processes on the host with timeouts and a scrubbed environment; use `EXECUTION_MODE=docker` for container isolation (requires Docker on the host). Dependency installation for arbitrary repositories is not automated; projects whose tests need `npm ci` should allow `npm ci --ignore-scripts` (already allowlisted) or use a prepared image.
 - **Sign-in is a demo access mechanism** (shared access code + name/email), not production authentication.
 - **One PATCHWORK server process per database.** On boot it marks work interrupted by a restart as FAILED (with Retry); two app processes sharing a database would interfere.
-- Docker Compose / Dockerfile were written but not built in the development sandbox.
+- The Docker image's runtime was verified (migrations, seed, `$PORT`, secure cookies, git workspaces), but the full `docker build` could not finish in the development sandbox because its build containers had no access to the npm registry.
 
 ## Project structure
 
