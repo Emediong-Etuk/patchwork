@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { ZodError, type ZodSchema } from "zod";
+import { ZodError, type ZodTypeAny, type output } from "zod";
 import { HttpError } from "@/src/lib/auth/session";
 
 export function json<T>(data: T, init?: number | ResponseInit) {
   return NextResponse.json(data, typeof init === "number" ? { status: init } : init);
 }
 
-export async function parseBody<T>(req: Request, schema: ZodSchema<T>): Promise<T> {
+export async function parseBody<S extends ZodTypeAny>(req: Request, schema: S): Promise<output<S>> {
   let raw: unknown;
   try {
     raw = await req.json();

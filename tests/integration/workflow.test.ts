@@ -70,6 +70,8 @@ describe("full incident workflow over Switch (simulator) with real repository op
     expect(byTitle("Registration tests fail")?.verificationStatus).toBe("VERIFIED");
     expect(byTitle("Fabricated reference")?.verificationStatus).toBe("CONTRADICTED");
     expect(byTitle("Initial hypothesis (to be tested)")?.verificationStatus).toBe("UNVERIFIED");
+    // Attempt 2 reverted register.js; that is not a false claim about its own commit.
+    expect(evidence.find((e) => e.title.startsWith("Fixer described changes"))).toBeUndefined();
     // QA attempt-1 test evidence is superseded by attempt 2.
     expect(evidence.filter((e) => e.type === "TEST_RESULT" && e.agentId === "agent_qa" && e.attempt === 1).every((e) => e.verificationStatus === "SUPERSEDED")).toBe(true);
 
@@ -94,6 +96,8 @@ describe("full incident workflow over Switch (simulator) with real repository op
     // Human message is relayed through Switch and answered by the addressed agent.
     await postHumanMessage(incident.id, { id: user.id, name: user.name }, "Do not modify the API response format.", "TRIAGE");
     await waitFor(() => db.agentMessage.findFirst({ where: { incidentId: incident.id, messageType: "CHAT" } }), { label: "consult reply" });
+    const human = await db.agentMessage.findFirstOrThrow({ where: { incidentId: incident.id, senderType: "HUMAN" } });
+    expect(human.content).toBe("Do not modify the API response format.");
 
     // Approval: local repository → branch preserved, resolved, never merged.
     const approved = await approveFix(incident.id, { id: user.id, name: user.name }, { createPullRequest: true });

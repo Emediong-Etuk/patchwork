@@ -51,7 +51,7 @@ export async function postToRoom(input: PostInput) {
       senderType: input.humanSender ? "HUMAN" : fromAgent ? "AGENT" : "SYSTEM",
       senderName: input.humanSender ? input.humanSender.name : fromAgent ? roleName(fromAgent) : "PATCHWORK Console",
       messageType: input.messageType,
-      content: stripMentions(text),
+      content: input.humanSender ? stripMentions(text).replace(/^\[[^\]]{1,80}\]\s*/, "") : stripMentions(text),
       metadata: metadata as Prisma.InputJsonValue,
       switchMessageId: sent.messageId,
     },

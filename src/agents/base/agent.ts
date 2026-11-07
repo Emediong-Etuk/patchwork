@@ -11,7 +11,7 @@ import type { AgentRole } from "@prisma/client";
 import type { ZodType } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { emitEvent } from "@/src/lib/events/bus";
-import type { LLMProvider, ToolResult, ToolSpec } from "@/src/lib/ai/types";
+import { AIProviderUnavailableError, type LLMProvider, type ToolResult, type ToolSpec } from "@/src/lib/ai/types";
 import { UNTRUSTED_POLICY } from "@/src/lib/security/untrusted";
 import { executeTool, TOOLS, type ToolContext, type ToolName } from "./tools";
 
@@ -66,7 +66,7 @@ export async function runAgent<T>(
   opts: { provider: LLMProvider; model: string; context: string; toolCtx: ToolContext; maxSteps: number; timeoutMs: number; signal?: AbortSignal },
 ): Promise<AgentRunResult<T>> {
   const availability = opts.provider.availability();
-  if (!availability.ok) throw new InvalidAgentResponseError(availability.reason);
+  if (!availability.ok) throw new AIProviderUnavailableError(availability.reason);
 
   const outputJsonSchema = zodToJsonSchema(def.outputSchema, { target: "jsonSchema7", $refStrategy: "none" }) as Record<string, unknown>;
   delete outputJsonSchema.$schema;

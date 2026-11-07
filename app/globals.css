@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/* PATCHWORK design tokens. Dark-first; light theme available via [data-theme="light"]. */
+:root {
+  --bg: #0a0a0c;
+  --surface: #111114;
+  --surface-2: #17171b;
+  --surface-3: #1e1e23;
+  --border: #26262c;
+  --border-strong: #34343c;
+  --fg: #ededf0;
+  --fg-muted: #a1a1aa;
+  --fg-subtle: #71717a;
+  --accent: #7c6cf6;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(124, 108, 246, 0.14);
+  --success: #3fb950;
+  --success-soft: rgba(63, 185, 80, 0.13);
+  --warning: #e3a33b;
+  --warning-soft: rgba(227, 163, 59, 0.13);
+  --danger: #f05252;
+  --danger-soft: rgba(240, 82, 82, 0.13);
+  --info: #4ea1f5;
+  --info-soft: rgba(78, 161, 245, 0.13);
+  --diff-add: rgba(63, 185, 80, 0.12);
+  --diff-del: rgba(240, 82, 82, 0.12);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f4f4f5;
+  --surface-3: #ececee;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --fg: #18181b;
+  --fg-muted: #52525b;
+  --fg-subtle: #71717a;
+  --accent: #5b4ce0;
+  --accent-soft: rgba(91, 76, 224, 0.1);
+  --diff-add: rgba(46, 160, 67, 0.12);
+  --diff-del: rgba(218, 54, 51, 0.1);
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  border-color: var(--border);
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+@keyframes pw-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.animate-soft-pulse {
+  animation: pw-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-soft-pulse, .animate-spin { animation: none; }
+}

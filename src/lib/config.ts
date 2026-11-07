@@ -29,7 +29,7 @@ const schema = z.object({
   FIXER_MODEL: z.string().default("claude-opus-5-5"),
   QA_MODEL: z.string().default("claude-sonnet-5-5"),
   AGENT_MAX_STEPS: z.coerce.number().int().min(4).max(200).default(40),
-  AGENT_TIMEOUT_MS: z.coerce.number().int().min(10_000).default(600_000),
+  AGENT_TIMEOUT_MS: z.coerce.number().int().min(1_000).default(600_000),
 
   // GitHub
   GITHUB_CLIENT_ID: z.string().optional(),

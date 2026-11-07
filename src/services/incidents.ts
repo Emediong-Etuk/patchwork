@@ -51,11 +51,13 @@ export async function listIncidents(userId: string, filter: { workspaceId?: stri
 /** Per-incident status of each agent, derived from its tasks there. */
 export async function incidentAgentStatuses(incidentId: string) {
   const [agents, tasks, incident] = await Promise.all([
-    db.agent.findMany({ orderBy: { id: "asc" } }),
+    db.agent.findMany(),
     db.agentTask.findMany({ where: { incidentId }, orderBy: { createdAt: "asc" } }),
     db.incident.findUniqueOrThrow({ where: { id: incidentId } }),
   ]);
   const waitingOn: Record<string, string> = { TRIAGING: "agent_triage", INVESTIGATING: "agent_investigator", FIXING: "agent_fixer", TESTING: "agent_qa" };
+  const order = ["TRIAGE", "INVESTIGATOR", "FIXER", "QA"];
+  agents.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   return agents.map((a) => {
     const mine = tasks.filter((t) => t.agentId === a.id && t.stage !== "consult");
     const last = mine[mine.length - 1];
