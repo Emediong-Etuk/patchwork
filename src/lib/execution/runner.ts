@@ -4,7 +4,7 @@
  * group, and capped output. EXECUTION_MODE=docker adds container isolation
  * (no network, memory/CPU/PID limits).
  */
-import { spawn, type ChildProcess } from "child_process";
+import { spawn, spawnSync, type ChildProcess } from "child_process";
 import { mkdirSync } from "fs";
 import { config } from "@/src/lib/config";
 import { parseCommand } from "@/src/lib/security/commands";
@@ -62,14 +62,27 @@ export async function runCommand(cwd: string, commandLine: string, opts: { timeo
     let timedOut = false;
     let child: ChildProcess;
     try {
-      child = spawn(program, args, { cwd, env: env as NodeJS.ProcessEnv, shell: false, detached: true, stdio: ["ignore", "pipe", "pipe"] });
+      // Windows: npm/npx/pnpm/yarn are .cmd shims, which Node can only start through
+      // cmd.exe. That is safe here because every argument already passed the
+      // allowlist's strict character check (no shell metacharacters or %).
+      const win = process.platform === "win32";
+      if (win) {
+        env.SystemRoot = process.env.SystemRoot ?? "C:\\Windows";
+        env.PATHEXT = process.env.PATHEXT ?? ".COM;.EXE;.BAT;.CMD";
+        env.APPDATA = `${home}\\AppData\\Roaming`;
+        env.USERPROFILE = home;
+      }
+      child = spawn(program, args, { cwd, env: env as NodeJS.ProcessEnv, shell: win, detached: !win, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
     } catch (e) {
       resolve({ command: parsed.display, status: "ERROR", exitCode: null, stdout: "", stderr: (e as Error).message, durationMs: 0, isolation });
       return;
     }
     const killTree = () => {
       try {
-        if (child.pid) process.kill(-child.pid, "SIGKILL");
+        if (!child.pid) return;
+        // Kill the whole process tree, not just the npm/cmd wrapper.
+        if (process.platform === "win32") spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { windowsHide: true });
+        else process.kill(-child.pid, "SIGKILL");
       } catch {
         child.kill("SIGKILL");
       }

@@ -12,7 +12,7 @@ export class CommandRejectedError extends Error {
 }
 
 const SHELL_META = /[;&|`$<>(){}\\\n\r*?!~#]/;
-const SAFE_ARG = /^[A-Za-z0-9@%+=:,./_-]+$/;
+const SAFE_ARG = /^[A-Za-z0-9@+=:,./_-]+$/;
 
 type Rule = { program: string; allow: (args: string[]) => boolean; description: string };
 

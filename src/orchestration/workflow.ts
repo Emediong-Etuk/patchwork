@@ -334,9 +334,9 @@ async function runFix(incident: Loaded, taskKey: string, attempt: number) {
 
     // Compare the Fixer's description with what this attempt's commit actually changed.
     const actual = new Set((await git(dir, ["diff", "--name-only", headBefore, commit])).stdout.split("\n").map((l) => l.trim()).filter(Boolean));
-    const claimed = new Set(r.filesModified.map((f) => f.path.replace(/^\.\//, "")));
+    const claimed = new Set(r.filesModified.map((f) => f.path.replace(/\\/g, "/").replace(/^\.\//, "")));
     for (const c of changes)
-      await recordObservation({ incidentId: incident.id, agentId: "agent_fixer", type: "CODE_REFERENCE", filePath: c.filePath, title: `${c.changeType === "ADDED" ? "Added" : c.changeType === "DELETED" ? "Deleted" : "Modified"} ${c.filePath} (+${c.additions} −${c.deletions})`, description: r.filesModified.find((f) => f.path.replace(/^\.\//, "") === c.filePath)?.description ?? "Changed by the Fixer but not described in its report.", source: `git diff ${s.incident.baseCommit!.slice(0, 8)}..${commit.slice(0, 8)}`, status: "VERIFIED", note: "Diff captured by PATCHWORK from the working branch.", influence: `Proposed fix, attempt ${attempt}`, attempt, taskId: s.taskId });
+      await recordObservation({ incidentId: incident.id, agentId: "agent_fixer", type: "CODE_REFERENCE", filePath: c.filePath, title: `${c.changeType === "ADDED" ? "Added" : c.changeType === "DELETED" ? "Deleted" : "Modified"} ${c.filePath} (+${c.additions} −${c.deletions})`, description: r.filesModified.find((f) => f.path.replace(/\\/g, "/").replace(/^\.\//, "") === c.filePath)?.description ?? "Changed by the Fixer but not described in its report.", source: `git diff ${s.incident.baseCommit!.slice(0, 8)}..${commit.slice(0, 8)}`, status: "VERIFIED", note: "Diff captured by PATCHWORK from the working branch.", influence: `Proposed fix, attempt ${attempt}`, attempt, taskId: s.taskId });
     const phantom = [...claimed].filter((p) => !actual.has(p));
     if (phantom.length) await recordObservation({ incidentId: incident.id, agentId: "agent_fixer", title: "Fixer described changes that are not in its commit", description: `Claimed but unchanged: ${phantom.join(", ")}`, source: "PATCHWORK verification", status: "CONTRADICTED", note: "Compared the report's filesModified with this attempt's commit.", attempt, taskId: s.taskId });
 

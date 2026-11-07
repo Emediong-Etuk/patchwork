@@ -166,7 +166,7 @@ export const TOOLS: Record<ToolName, ToolImpl> = {
     },
     run: async (input, ctx) => {
       const rel = str(input.path, "path");
-      if (/(^|\/)\.env(\.|$)/.test(rel) || path.basename(rel).startsWith(".env")) return { content: "Writing .env files is not allowed.", isError: true, summary: "blocked .env write" };
+      if (/(^|[\\/])\.env(\.|$)/.test(rel) || path.basename(rel).startsWith(".env")) return { content: "Writing .env files is not allowed.", isError: true, summary: "blocked .env write" };
       const r = await writeFileSafe(ctx.workspaceDir, rel, str(input.content, "content"));
       ctx.trace.filesWritten.add(r.path);
       return { content: `${r.created ? "Created" : "Overwrote"} ${r.path}.`, summary: `${r.created ? "created" : "rewrote"} ${r.path}` };

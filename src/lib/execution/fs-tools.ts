@@ -6,6 +6,8 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+const toPosix = (p: string) => p.split(path.sep).join("/");
+
 const IGNORED_DIRS = new Set([".git", "node_modules", ".next", "dist", "build", "coverage", ".venv", "__pycache__", "target", ".patchwork", ".turbo"]);
 const MAX_FILE_BYTES = 512 * 1024;
 
@@ -42,7 +44,7 @@ export async function listFiles(root: string, dir = ".", maxEntries = 400): Prom
       if (out.length >= maxEntries) return;
       if (e.isSymbolicLink()) continue;
       const full = path.join(abs, e.name);
-      const rel = path.relative(realRoot, full);
+      const rel = toPosix(path.relative(realRoot, full));
       if (e.isDirectory()) {
         if (IGNORED_DIRS.has(e.name)) continue;
         out.push(rel + "/");
@@ -66,7 +68,7 @@ export async function readFileLines(root: string, rel: string, startLine = 1, en
     .slice(s - 1, e)
     .map((l, i) => `${String(s + i).padStart(4, " ")}| ${l}`)
     .join("\n");
-  return { path: path.normalize(rel), totalLines: lines.length, startLine: s, endLine: e, text };
+  return { path: toPosix(path.normalize(rel)), totalLines: lines.length, startLine: s, endLine: e, text };
 }
 
 export async function searchCode(root: string, query: string, opts: { regex?: boolean; maxResults?: number } = {}): Promise<{ path: string; line: number; text: string }[]> {
@@ -101,7 +103,7 @@ export async function writeFileSafe(root: string, rel: string, content: string):
   const existed = await fs.stat(full).then(() => true).catch(() => false);
   await fs.mkdir(path.dirname(full), { recursive: true });
   await fs.writeFile(full, content, "utf8");
-  return { path: path.normalize(rel), created: !existed };
+  return { path: toPosix(path.normalize(rel)), created: !existed };
 }
 
 export async function replaceInFile(root: string, rel: string, oldText: string, newText: string): Promise<{ path: string }> {
@@ -114,5 +116,5 @@ export async function replaceInFile(root: string, rel: string, oldText: string, 
   if (count === 0) throw new PathRejectedError("old_text was not found in the file; read the file again and copy the text exactly");
   if (count > 1) throw new PathRejectedError(`old_text matches ${count} places; include more surrounding lines so it is unique`);
   await fs.writeFile(full, content.replace(oldText, () => newText), "utf8");
-  return { path: path.normalize(rel) };
+  return { path: toPosix(path.normalize(rel)) };
 }
